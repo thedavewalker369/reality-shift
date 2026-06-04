@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Reality Shift</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0F0E0C; --surface: #1A1916; --border: rgba(255,255,255,0.07);
+    --border-mid: rgba(255,255,255,0.12); --gold: #C8943A; --gold-light: #E2B96A;
+    --gold-faint: rgba(200,148,58,0.12); --gold-border: rgba(200,148,58,0.25);
+    --text: #EDE8DF; --muted: #8A8478; --faint: #504E49; --user-bubble: #1E1C18;
+    --serif: 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+    --sans: 'DM Sans', system-ui, sans-serif;
+  }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); }
+  body { display: flex; flex-direction: column; min-height: 100vh; }
+  ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--faint); border-radius: 2px; }
+  @keyframes pulse { 0%,100%{opacity:0.3} 50%{opacity:1} }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+  .fadeup { animation: fadeUp 0.3s ease forwards; }
+
+  #header {
+    padding: 1.1rem 1.5rem; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0; background: var(--bg); position: sticky; top: 0; z-index: 10;
+  }
+  .header-eyebrow { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-bottom: 2px; }
+  .header-title { font-family: var(--serif); font-size: 19px; color: var(--text); }
+  .header-actions { display: flex; gap: 8px; }
+  .btn { border-radius: 6px; font-family: var(--sans); font-size: 12px; cursor: pointer; padding: 0.4rem 0.8rem; transition: all 0.15s; }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  .btn-ghost:hover { border-color: var(--border-mid); color: var(--text); }
+  .btn-gold { background: var(--gold); border: none; color: #0F0E0C; font-weight: 500; }
+  .btn-gold:disabled { background: var(--surface); color: var(--faint); cursor: default; }
+  .btn-gold-lg {
+    background: var(--gold); border: none; border-radius: 6px; padding: 0.75rem 1.6rem;
+    font-size: 14px; font-weight: 500; color: #0F0E0C; cursor: pointer;
+    font-family: var(--sans); letter-spacing: 0.01em; transition: background 0.15s;
+  }
+  .btn-gold-lg:hover { background: #b8832e; }
+
+  #main { flex: 1; overflow-y: auto; padding: 2rem 1.5rem 1.5rem; }
+  #main-inner { max-width: 680px; margin: 0 auto; }
+
+  #welcome { max-width: 480px; }
+  .welcome-h { font-family: var(--serif); font-size: 28px; color: var(--text); line-height: 1.35; margin-bottom: 1.25rem; font-weight: 400; }
+  .welcome-p { font-size: 14px; color: var(--muted); line-height: 1.9; margin-bottom: 1.25rem; }
+  .welcome-quiet { font-size: 13px; color: var(--faint); line-height: 1.7; margin-bottom: 2rem; }
+  .welcome-credit { margin-top: 2.5rem; font-size: 12px; color: var(--faint); font-family: var(--serif); font-style: italic; }
+
+  #chat { display: flex; flex-direction: column; gap: 0; }
+  .msg { display: flex; margin-bottom: 20px; animation: fadeUp 0.25s ease forwards; }
+  .msg-ai { justify-content: flex-start; }
+  .msg-user { justify-content: flex-end; }
+  .msg-avatar {
+    width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-right: 10px; margin-top: 3px;
+    font-size: 11px; color: var(--gold); font-family: var(--serif);
+  }
+  .msg-bubble-ai { font-family: var(--serif); font-size: 16px; color: var(--text); line-height: 1.8; max-width: 80%; }
+  .msg-bubble-user {
+    max-width: 80%; padding: 0.7rem 1rem; border-radius: 12px 12px 4px 12px;
+    background: var(--user-bubble); border: 1px solid var(--border);
+    font-size: 15px; color: var(--text); line-height: 1.8; font-family: var(--sans);
+  }
+  .msg-bubble-ai p { margin-bottom: 0.5em; }
+  .msg-bubble-ai p:last-child { margin-bottom: 0; }
+  .typing-dot {
+    display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--muted); margin-right: 4px;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+
+  #input-bar { border-top: 1px solid var(--border); padding: 1rem 1.5rem 1.25rem; background: var(--bg); flex-shrink: 0; }
+  #input-row { max-width: 680px; margin: 0 auto; display: flex; gap: 10px; align-items: flex-end; }
+  #input-textarea {
+    flex: 1; background: var(--surface); border: 1px solid var(--border-mid);
+    border-radius: 10px; padding: 0.75rem 1rem; font-size: 15px; color: var(--text);
+    font-family: var(--sans); resize: none; outline: none; line-height: 1.6;
+    overflow: hidden; transition: opacity 0.2s; min-height: 44px; max-height: 150px;
+  }
+  #input-textarea:disabled { opacity: 0.45; }
+  #send-btn {
+    background: var(--surface); border: none; border-radius: 8px;
+    width: 42px; height: 42px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    cursor: default; font-size: 18px; color: var(--faint); transition: background 0.15s;
+  }
+  #send-btn.active { background: var(--gold); color: #0F0E0C; cursor: pointer; }
+
+  #complete-bar {
+    border-top: 1px solid var(--border); padding: 1rem 1.5rem; background: var(--bg);
+    flex-shrink: 0; text-align: center; font-size: 13px; color: var(--muted);
+    font-family: var(--serif); font-style: italic; display: none;
+  }
+  #complete-bar a { color: var(--gold); cursor: pointer; }
+
+  #summary-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.92);
+    overflow-y: auto; z-index: 100; display: none; justify-content: center;
+    padding: 2rem 1rem 5rem;
+  }
+  #summary-overlay.open { display: flex; }
+  #summary-inner { max-width: 620px; width: 100%; animation: fadeUp 0.3s ease forwards; }
+  .sum-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 2.5rem; }
+  .sum-eyebrow { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-bottom: 4px; }
+  .sum-title { font-family: var(--serif); font-size: 24px; color: var(--text); }
+  .belief-block { background: var(--gold-faint); border: 1px solid var(--gold-border); border-left: 3px solid var(--gold); border-radius: 6px; padding: 1rem 1.15rem; margin-bottom: 2.5rem; }
+  .belief-label { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+  .belief-text { font-family: var(--serif); font-style: italic; font-size: 18px; color: var(--text); line-height: 1.6; }
+  .sum-section-label { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); margin-bottom: 1.25rem; }
+  .sum-q { border-left: 1px solid var(--border); padding-left: 1.1rem; margin-bottom: 1.5rem; }
+  .sum-q-label { font-size: 12px; color: var(--muted); margin-bottom: 5px; font-style: italic; }
+  .sum-q-answer { font-size: 13px; color: var(--gold-light); font-weight: 500; margin-bottom: 5px; }
+  .sum-q-text { font-size: 14px; color: var(--text); line-height: 1.75; font-family: var(--serif); }
+  .ta-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.1rem 1.2rem; margin-bottom: 1rem; }
+  .ta-statement { font-family: var(--serif); font-style: italic; font-size: 16px; color: var(--gold-light); margin-bottom: 0.9rem; line-height: 1.5; }
+  .ta-example { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
+  .ta-example:last-child { margin-bottom: 0; }
+  .ta-dot { color: var(--gold); font-size: 14px; margin-top: 2px; flex-shrink: 0; }
+  .ta-ex-text { font-size: 14px; color: var(--muted); line-height: 1.7; }
+  .sum-closing { border-top: 1px solid var(--border); padding-top: 1.75rem; margin-bottom: 2rem; }
+  .sum-closing-q { font-size: 12px; color: var(--muted); margin-bottom: 10px; font-style: italic; }
+  .sum-closing-a { font-family: var(--serif); font-style: italic; font-size: 15px; color: var(--text); line-height: 1.75; }
+  .sum-credit { padding-top: 1.5rem; border-top: 1px solid var(--border); font-family: var(--serif); font-style: italic; font-size: 13px; color: var(--faint); text-align: center; line-height: 1.9; }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div>
+    <div class="header-eyebrow">A guided inquiry</div>
+    <div class="header-title">The Reality Shift</div>
+  </div>
+  <div class="header-actions" id="header-actions"></div>
+</div>
+
+<div id="main">
+  <div id="main-inner">
+    <div id="welcome" class="fadeup">
+      <div class="welcome-h">A guided process to help you<br>transform your painful thoughts.</div>
+      <div class="welcome-p">The beliefs and statements we hold about reality shape how we experience life. They tell us what's true, what's possible, what we deserve — and they determine the quality of our relationship with reality itself.</div>
+      <div class="welcome-p">That relationship is everything. When we're in conflict with reality, we suffer. When we're at peace with it, we're free — not because anything outside has changed, but because our perspective has.</div>
+      <div class="welcome-p">This process works by asking simple questions. Nothing should feel forced. Approach it like a meditation — answer as honestly and truthfully as you can at every point. The questions do the work.</div>
+      <div class="welcome-quiet">Find somewhere quiet. This takes about 15–20 minutes.</div>
+      <button class="btn-gold-lg" onclick="startSession()">Begin →</button>
+      <div class="welcome-credit">Inspired by The Work of Byron Katie</div>
+    </div>
+    <div id="chat" style="display:none;"></div>
+  </div>
+</div>
+
+<div id="input-bar" style="display:none;">
+  <div id="input-row">
+    <textarea id="input-textarea" rows="1" placeholder="Reply here... (Enter to send, Shift+Enter for new line)"></textarea>
+    <button id="send-btn" onclick="handleSend()">↑</button>
+  </div>
+</div>
+
+<div id="complete-bar">
+  The session is complete. <span id="summary-link"></span>
+</div>
+
+<div id="summary-overlay">
+  <div id="summary-inner"></div>
+</div>
+
+<script>
+const SYSTEM = `You are a gentle, skilled facilitator guiding someone through a process of inquiry called The Reality Shift. Your tone is warm, grounded, and conversational — like sitting with a wise, unhurried friend. You never rush. You never project or interpret. You mirror the person's own language back to them.
+
+IMPORTANT RULE: Never number or label the questions. Never say "Question 1" or "moving to the next question" or "for our third question." The process should feel like a natural, flowing conversation, not a form or checklist. The questions unfold organically.
+
+You follow this exact flow, tracking internally where you are:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHASE 1 — EXPLORE THE STRESS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Ask them to share what is causing them stress right now in their life. Let them write freely. Listen for the underlying beliefs embedded in what they share.
+
+After they respond, gently extract 3-5 simple, direct belief statements (e.g. "She doesn't appreciate me", "I'm not enough", "Life is unfair") that seem to underlie what they've shared. Present these clearly as a numbered list. Tell them to pick the one that feels most stressful or charged right now — or if none fit, to write their own.
+
+IMPORTANT: If their response is already a clean, simple belief statement, affirm it and move directly to asking them to confirm it as the belief to work with.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHASE 2 — IDENTIFY THE BELIEF
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Once they've chosen a belief, confirm it. If it's too complex (a story, multiple claims, or a paragraph), gently ask them to simplify it into one clean statement — one thought about reality that causes stress. Tell them that if they have several, they can look at each one individually, but for now let's pick just one.
+
+Once you have a clean, simple belief, silently identify its type: (a) about another person, (b) about themselves, (c) about the world/a situation. You'll use this later for the turnarounds.
+
+Confirm the belief back to them clearly (quote it), then begin the inquiry.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHASE 3 — THE FOUR QUESTIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Work through the four questions one at a time conversationally — do NOT label or number them. Only move to the next when the person has genuinely engaged with the current one. If an answer feels surface-level, gently invite a little more before moving on.
+
+Q1 — "Is it true?" Ask it simply. Accept yes or no. Invite brief reflection if they give only a one-word answer. Mirror back their words. Bridge naturally to Q2.
+
+Q2 — "Can you absolutely know that it's true?" Not probably, not mostly. 100% certainty. Ask it as a gentle deepening, not a new form field. Reflect, bridge naturally to Q3.
+
+Q3 — "How do you react — what happens — when you believe that thought?" Ask them to be specific: what do they feel, what do they do, how do they treat themselves and others? Witness what they describe using their own words. Bridge naturally to Q4.
+
+Q4 — "Who would you be without the thought?" Not forever, not pretending it's false. Just: right now, in this moment, who would you be without it? Honor what they glimpse. Bridge naturally to the turnarounds.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHASE 4 — THE TURNAROUNDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+This is a crucial phase. Follow this structure carefully.
+
+STEP A — INTRODUCE TURNAROUNDS:
+Begin by reminding them of their original belief (quote it clearly). Then explain turnarounds conversationally:
+- A turnaround is simply a different direction of the original thought — the opposite, or a reversal.
+- There are typically three kinds:
+  • "To the self" — replacing the subject with "I" or "my thinking"
+  • "To the other" — reversing who it applies to (for beliefs about another person)
+  • "To the opposite" — simply negating the original statement
+- For self-directed beliefs, the turnarounds are: "to my thinking" and "to the opposite."
+- For world-directed beliefs: "to the self", "to my thinking about it", and "the opposite."
+- We're looking for turnarounds that feel AS TRUE OR TRUER than the original — not forced positivity, genuine inquiry.
+- Tell them: "For each turnaround, we're going to find three real examples together. If you get stuck at any point, just say so and I'll help."
+
+Then invite them to attempt finding the turnarounds themselves first — without giving them the specific statements yet.
+
+STEP B — WORK THROUGH TURNAROUNDS ONE BY ONE:
+For each turnaround, follow this exact sequence:
+
+1. Help them land on the turnaround statement (or confirm the one they found).
+2. Say something like: "Good. Now let's find three real examples of how [turnaround statement] is as true or truer than your original belief. Can you think of a first one?"
+3. After they share an example, briefly acknowledge it warmly (one sentence), then ask: "And a second example?"
+4. After the second, acknowledge briefly, then ask: "And a third?"
+5. Once they have three examples (or have genuinely tried and need help — offer one if they're stuck), do a full restatement: "So — [turnaround statement]. And you found: [example 1], [example 2], [example 3]." State it clearly and completely. This is a moment of consolidation.
+6. Then ask: "Is there another turnaround that feels as true or truer than your original belief?" and repeat from step 1.
+7. Continue until they say they feel complete or have worked through all the turnarounds.
+
+If they get stuck finding examples at any point, offer a gentle prompt or a possible example to help them — but always invite them to confirm it feels true for them.
+
+STEP C — CLOSING INTEGRATION:
+Once they feel complete with all turnarounds, offer this closing reflection warmly, in your own words:
+- A stressful belief doesn't just describe reality — it actively causes suffering and helps create the very conditions that produce more pain. It becomes a self-perpetuating loop.
+- By simply adopting a different perspective — one that is as true or truer than the original, without changing anything in reality — your relationship to reality shifts. That shift is what supports you moving forward.
+- True freedom and peace aren't about changing reality. They're about your relationship with reality.
+
+Then ask: "Do you see any stress-free reason to keep your original thought?"
+
+Receive their answer with warmth and presence. After they respond, end with a single warm closing sentence — then write exactly this token on its own line:
+[SESSION COMPLETE]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GENERAL RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- One thing at a time. Never ask two questions in the same message.
+- Be brief — 2-5 sentences per message. Turnaround introductions and restatements are the exception.
+- Never label or number questions or phases. The process should feel like a conversation, not a worksheet.
+- No platitudes, no cheerleading, no spiritual bypassing.
+- Stay in the inquiry. You are here to ask and witness, not to comfort or fix.
+- Mirror the person's own language. Don't substitute your vocabulary for theirs.`;
+
+const SUMMARY_SYSTEM = `You are generating a structured summary of a completed Reality Shift session. Extract and organise the key elements from the conversation history into clean JSON.
+
+Return ONLY valid JSON — no markdown, no explanation, no preamble:
+{
+  "belief": "the core belief that was worked",
+  "beliefType": "about another person | about themselves | about the world",
+  "q1": { "answer": "yes or no", "reflection": "brief summary of what they said" },
+  "q2": { "answer": "yes or no", "reflection": "brief summary" },
+  "q3": "summary of how they react when they believe the thought",
+  "q4": "summary of who they would be without the thought",
+  "turnarounds": [
+    { "statement": "the turnaround statement", "examples": ["example 1", "example 2", "example 3"] }
+  ],
+  "closingAnswer": "their answer to: do you see any stress-free reason to keep your original thought?"
+}
+Be faithful to their actual words. Use direct quotes where possible. Do not invent or embellish.`;
+
+let history = [];
+
+const OPENER = `You are beginning a Reality Shift session. Welcome the person warmly in one sentence — do not mention Byron Katie or "The Work" by name. Then ask them simply: what is causing them stress right now in their life? Let them know they can share as much or as little as they want.`;
+
+async function callClaude(messages, system, maxTokens = 1200) {
+  const res = await fetch('/api/claude', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: maxTokens, system, messages })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.content?.[0]?.text || '';
+}
+
+async function startSession() {
+  document.getElementById('welcome').style.display = 'none';
+  document.getElementById('chat').style.display = 'flex';
+  document.getElementById('input-bar').style.display = 'block';
+  addHeaderBtn('↺ Start over', restart);
+
+  history = [{ role: 'user', content: OPENER }];
+  showTyping();
+  try {
+    const text = await callClaude(history, SYSTEM);
+    hideTyping();
+    addAIMessage(text);
+    history.push({ role: 'assistant', content: text });
+    checkComplete(text);
+  } catch(e) {
+    hideTyping();
+    addAIMessage('Something went wrong starting the session. Please refresh and try again.');
+  }
+  document.getElementById('input-textarea').focus();
+}
+
+function addHeaderBtn(label, fn) {
+  const actions = document.getElementById('header-actions');
+  const btn = document.createElement('button');
+  btn.className = 'btn btn-ghost';
+  btn.textContent = label;
+  btn.onclick = fn;
+  actions.appendChild(btn);
+}
+
+function addAIMessage(text) {
+  const clean = text.replace('[SESSION COMPLETE]', '').trim();
+  const div = document.createElement('div');
+  div.className = 'msg msg-ai';
+  const avatar = document.createElement('div');
+  avatar.className = 'msg-avatar';
+  avatar.textContent = '✦';
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble-ai';
+  clean.split('\n').forEach(line => {
+    if (line.trim() === '') { bubble.appendChild(document.createElement('br')); return; }
+    const p = document.createElement('p');
+    p.textContent = line;
+    bubble.appendChild(p);
+  });
+  div.appendChild(avatar);
+  div.appendChild(bubble);
+  document.getElementById('chat').appendChild(div);
+  scrollBottom();
+}
+
+function addUserMessage(text) {
+  const div = document.createElement('div');
+  div.className = 'msg msg-user';
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble-user';
+  text.split('\n').forEach((line, i) => {
+    if (i > 0) bubble.appendChild(document.createElement('br'));
+    bubble.appendChild(document.createTextNode(line));
+  });
+  div.appendChild(bubble);
+  document.getElementById('chat').appendChild(div);
+  scrollBottom();
+}
+
+let typingEl = null;
+function showTyping() {
+  typingEl = document.createElement('div');
+  typingEl.className = 'msg msg-ai';
+  const avatar = document.createElement('div');
+  avatar.className = 'msg-avatar';
+  avatar.textContent = '✦';
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble-ai';
+  [0,1,2].forEach(i => {
+    const dot = document.createElement('span');
+    dot.className = 'typing-dot';
+    dot.style.animationDelay = `${i*0.2}s`;
+    bubble.appendChild(dot);
+  });
+  typingEl.appendChild(avatar);
+  typingEl.appendChild(bubble);
+  document.getElementById('chat').appendChild(typingEl);
+  scrollBottom();
+  document.getElementById('input-textarea').disabled = true;
+  document.getElementById('send-btn').classList.remove('active');
+}
+
+function hideTyping() {
+  if (typingEl) { typingEl.remove(); typingEl = null; }
+  document.getElementById('input-textarea').disabled = false;
+  updateSendBtn();
+}
+
+function scrollBottom() {
+  const main = document.getElementById('main');
+  main.scrollTop = main.scrollHeight;
+}
+
+function updateSendBtn() {
+  const val = document.getElementById('input-textarea').value.trim();
+  document.getElementById('send-btn').classList.toggle('active', !!val);
+}
+
+async function handleSend() {
+  const ta = document.getElementById('input-textarea');
+  const val = ta.value.trim();
+  if (!val || ta.disabled) return;
+  ta.value = '';
+  ta.style.height = 'auto';
+  updateSendBtn();
+  addUserMessage(val);
+  history.push({ role: 'user', content: val });
+  showTyping();
+  try {
+    const text = await callClaude(history, SYSTEM);
+    hideTyping();
+    addAIMessage(text);
+    history.push({ role: 'assistant', content: text });
+    checkComplete(text);
+  } catch(e) {
+    hideTyping();
+    addAIMessage('Something went wrong — please try again.');
+  }
+  ta.focus();
+}
+
+function checkComplete(text) {
+  if (!text.includes('[SESSION COMPLETE]')) return;
+  document.getElementById('input-bar').style.display = 'none';
+  document.getElementById('complete-bar').style.display = 'block';
+  document.getElementById('summary-link').innerHTML = '<span style="color:var(--faint)">Preparing your summary...</span>';
+  generateSummary();
+}
+
+async function generateSummary() {
+  try {
+    const transcript = history
+      .filter(m => m.role === 'user' || m.role === 'assistant')
+      .map(m => `${m.role === 'user' ? 'User' : 'Facilitator'}: ${m.content}`)
+      .join('\n\n');
+    const raw = await callClaude(
+      [{ role: 'user', content: `Here is the full session transcript:\n\n${transcript}\n\nGenerate the JSON summary.` }],
+      SUMMARY_SYSTEM, 2000
+    );
+    const data = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    renderSummary(data);
+    document.getElementById('summary-link').innerHTML = '<a onclick="openSummary()">View your summary →</a>';
+  } catch(e) {
+    document.getElementById('summary-link').innerHTML = '';
+  }
+}
+
+let summaryHTML = '';
+function renderSummary(d) {
+  const qs = [
+    { label: 'Is it true?', answer: d.q1?.answer, detail: d.q1?.reflection },
+    { label: "Can you absolutely know that it's true?", answer: d.q2?.answer, detail: d.q2?.reflection },
+    { label: 'How do you react when you believe that thought?', detail: d.q3 },
+    { label: 'Who would you be without the thought?', detail: d.q4 },
+  ];
+  summaryHTML = `
+    <div class="sum-header">
+      <div><div class="sum-eyebrow">Session summary</div><div class="sum-title">Your Reality Shift</div></div>
+      <button class="btn btn-ghost" onclick="closeSummary()">← Back</button>
+    </div>
+    <div class="belief-block">
+      <div class="belief-label">The belief · ${d.beliefType || ''}</div>
+      <div class="belief-text">"${d.belief || ''}"</div>
+    </div>
+    <div class="sum-section-label">The inquiry</div>
+    ${qs.map(q => `
+      <div class="sum-q">
+        <div class="sum-q-label">${q.label}</div>
+        ${q.answer ? `<div class="sum-q-answer">${q.answer}</div>` : ''}
+        <div class="sum-q-text">${q.detail || ''}</div>
+      </div>`).join('')}
+    <div class="sum-section-label" style="margin-top:2rem">Turnarounds</div>
+    ${(d.turnarounds || []).map(t => `
+      <div class="ta-card">
+        <div class="ta-statement">"${t.statement}"</div>
+        ${(t.examples || []).map(ex => `
+          <div class="ta-example"><span class="ta-dot">·</span><span class="ta-ex-text">${ex}</span></div>`).join('')}
+      </div>`).join('')}
+    ${d.closingAnswer ? `
+      <div class="sum-closing">
+        <div class="sum-closing-q">Do you see any stress-free reason to keep your original thought?</div>
+        <div class="sum-closing-a">"${d.closingAnswer}"</div>
+      </div>` : ''}
+    <div class="sum-credit">Inspired by The Work of Byron Katie</div>`;
+  document.getElementById('summary-inner').innerHTML = summaryHTML;
+}
+
+function openSummary() { document.getElementById('summary-overlay').classList.add('open'); }
+function closeSummary() { document.getElementById('summary-overlay').classList.remove('open'); }
+
+function restart() {
+  history = [];
+  document.getElementById('chat').innerHTML = '';
+  document.getElementById('chat').style.display = 'none';
+  document.getElementById('input-bar').style.display = 'none';
+  document.getElementById('complete-bar').style.display = 'none';
+  document.getElementById('header-actions').innerHTML = '';
+  document.getElementById('summary-overlay').classList.remove('open');
+  document.getElementById('input-textarea').value = '';
+  document.getElementById('input-textarea').disabled = false;
+  document.getElementById('send-btn').classList.remove('active');
+  document.getElementById('welcome').style.display = 'block';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const ta = document.getElementById('input-textarea');
+  ta.addEventListener('input', () => {
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight, 150) + 'px';
+    updateSendBtn();
+  });
+  ta.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+  });
+});
+</script>
+</body>
+</html>
